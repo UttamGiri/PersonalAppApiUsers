@@ -1,0 +1,184 @@
+H2 Database console
+
+http://localhost:8011/users-ws/h2-console
+
+Eureka Dashboard
+http://localhost:8010/
+
+ZUUL API 
+http://localhost:8011/
+
+
+create user 
+
+     email , password needed,  password is saved encrypted.   user id is generated randomly and saved which is used for executive calls . 
+   for login we dont use email because email cannot be changed for id re covery which generated id can be changed . this is registration process
+
+/login  is default if spring security login implemented
+http://localhost:8011/users-ws/login
+
+For login
+use email
+and password we provided during registration.
+
+now this generates token ID and sends back token id and user id during login.   which can be appended  for executive calls.
+
+
+now generated id is used for login
+
+FLOW: -  WebSecurity called then and().addFilter(getAuthenticationFilter()); AuthenticationFilter  attemptAuthentication called
+         then UserServiceImpl loadUserByUsername called to check if username present if not throw exception username not found
+
+          if found calls AuthenticationFilter successfulAuthentication here generates token
+
+
+	                .setSubject(userDetails.getUserId())
+	                .setExpiration(new Date(System.currentTimeMillis() + Long.parseLong(environment.getProperty("token.expiration_time"))))
+	                .signWith(SignatureAlgorithm.HS512, environment.getProperty("token.secret") )
+          see userid  expiration is set later with this userid we know the user , token.secret   we assign for secrecy
+
+          and add header id and token generated for further cal
+          
+          
+          
+          
+          Create User
+          http://localhost:8011/users-ws/users
+          {
+
+			 "firstName": "Uttam",
+			 "lastName": "Giri",
+			 "password": "123456708",
+			 "email": "uttamgiri32@gmail.com"
+			
+			}
+			
+			Login
+			http://localhost:8011/users-ws/login
+			{
+			   "email": "uttamgiri32@gmail.com",
+			   "password": "12345678"
+			
+			}
+			
+			Consecutive calls
+			
+			generated id saved during registration (create user) why generated id cause security .  not using email .  later user id can be recovered.
+			and token generated during login.
+			
+			
+			call 
+			http://localhost:8011/users-ws/users/status/check
+			header
+			 Authorization   Bearer token
+			
+			http://localhost:8011/users-ws/users/status/check
+			
+			
+			
+			
+			STEP
+			
+			CREATE USER
+			
+			1.  http://localhost:8011/users-ws/users
+			
+			INPUT
+			
+			{
+
+			 "firstName": "Uttam",
+			 "lastName": "Giri",
+			 "password": "12345678",
+			 "email": "uttamgiri32@gmail.com"
+			
+			}
+			
+			O/P
+			USERID
+			
+			2. LOGIN
+			
+			 http://localhost:8011/users-ws/users/login
+			
+			INPUT 
+		
+			
+            {
+			   "email": "uttamgiri32@gmail.com",
+			   "password": "12345678"
+			
+			}
+			
+			OUTPUT
+			
+			TOKEN
+			USERID
+          
+          3.  CHECK
+          
+          http://localhost:8011/users-ws/users/status/check
+          
+          HEADER Authorization   Bearer TOKEN  
+          
+          o/p Users Working on port: 54135, with token
+          
+          4.  check fien connection
+          http://localhost:8011/users-ws/users/userid  (generated)
+           HEADER Authorization   Bearer TOKEN  
+           
+           O/P  json 
+           
+           
+           LOGSTASH
+           
+           run  bin/logstash -f logstashConfig.conf    (... logstashConfig  it is what you created)
+           
+           
+           format 
+           
+           input {
+    file {
+        type=>"users-ws-log"
+        path=>"/Users/uttamgiri/Desktop/Microservices/dev/log/users-ws.log"
+    }
+    file {
+        type=>"account-ws-log"
+        path=>"/Users/uttamgiri/Desktop/Microservices/dev/log/account-ws.log"
+    }
+}
+ 
+output {
+ 
+    if [type] == "users-ws-log" {
+ 
+        elasticsearch {
+            hosts => ["localhost:9200"]
+            index => "users-ws-%{+YYYY.MM.dd}"
+        }
+ 
+    }
+ 
+    else if [type] == "account-ws-log" {
+ 
+        elasticsearch {
+            hosts => ["localhost:9200"]
+            index => "account-ws-%{+YYYY.MM.dd}"
+        }
+ 
+    }
+ 
+    stdout { codec => rubydebug }
+}
+          https://www.elastic.co/ 
+           
+           ELASTIC SEARCH
+           http://localhost:9200/_cat/_indices  to check if microprocessor log shows  you shouold see two indices  users-ws-2020.07.09  and account-2020.07.09
+           users-ws-2020.07.09  replace it to recent
+           
+           http://localhost:9200/users-ws-2020.07.09/_search?q=*&format&pretty
+          
+          
+          ZIPKIN:  http://localhost:9411/zipkin/
+          
+          docker build --tag=uttamgiri32/users-microservice --force-rm=true .
