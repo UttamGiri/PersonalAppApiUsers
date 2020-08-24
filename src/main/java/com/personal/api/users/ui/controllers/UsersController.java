@@ -17,11 +17,15 @@ import org.springframework.web.client.RestTemplate;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 
+
 import com.personal.api.users.service.UsersService;
 import com.personal.api.users.shared.UserDto;
 import com.personal.api.users.ui.model.CreateUserRequestModel;
 import com.personal.api.users.ui.model.CreateUserResponseMoidel;
 import com.personal.api.users.ui.model.UserResponseModel;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/users")
@@ -66,5 +70,23 @@ public class UsersController {
 	        UserResponseModel returnValue = new ModelMapper().map(userDto, UserResponseModel.class);
 	        
 	        return ResponseEntity.status(HttpStatus.OK).body(returnValue);
+	    }
+	 
+	 @GetMapping(value="/mono/{userId}", produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
+	    public ResponseEntity< Mono<UserDto>> getUserMono(@PathVariable("userId") String userId) {
+	       
+		 Mono<UserDto> userDtoMono = userService.findById(userId);
+
+	        
+	        return ResponseEntity.status(HttpStatus.OK).body(userDtoMono);
+	    }
+	 
+	 @GetMapping(value="/flux", produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
+	    public ResponseEntity<Flux<UserDto>> getUserFlux() {
+	       
+		 Flux<UserDto> userDtoFlux = userService.findAll(); 
+
+	        
+		 return new ResponseEntity<Flux<UserDto>>(userDtoFlux, HttpStatus.OK);
 	    }
 }

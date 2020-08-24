@@ -1,13 +1,17 @@
 package com.personal.api.users;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import feign.Logger;
 
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
@@ -20,6 +24,7 @@ import org.springframework.core.env.Environment;
 @EnableDiscoveryClient
 @EnableFeignClients
 @EnableCircuitBreaker
+//@EnableAutoConfiguration(exclude = {WebMvcAutoConfiguration.class })
 public class PersonalAppApiUsersApplication {
 	
 	@Autowired
@@ -28,6 +33,7 @@ public class PersonalAppApiUsersApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(PersonalAppApiUsersApplication.class, args);
 	}
+		
 	
 	@Bean
 	public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -40,6 +46,12 @@ public class PersonalAppApiUsersApplication {
 	public RestTemplate  getRestTemplate() {
 		return new RestTemplate();
 		
+	}
+	
+	@Bean
+	@LoadBalanced
+	public WebClient.Builder getWebClientBuilder(){
+		return WebClient.builder();
 	}
 	
 	
@@ -76,6 +88,11 @@ public class PersonalAppApiUsersApplication {
 	public String createDevelopmentBean() {
 		System.out.println("Development bean created. myapplication.environment = " + environment.getProperty("myapplication.environment"));
 		return "Development bean";
+	}
+	
+	@Bean
+	public ModelMapper modelMapper() {
+	    return new ModelMapper();
 	}
 	
 	
