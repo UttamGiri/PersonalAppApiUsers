@@ -28,6 +28,8 @@ public class UserHelper {
 	}
 	
 	public static UserDto convertToDto(UserEntity post) {
+		if(modelMapper == null)
+			modelMapper = new ModelMapper();
 		UserDto userDto = modelMapper.map(post, UserDto.class);
 	    return userDto;
 	}

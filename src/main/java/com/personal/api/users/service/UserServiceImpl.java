@@ -1,8 +1,10 @@
 package com.personal.api.users.service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -23,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.personal.api.users.data.AccountServiceClient;
+import com.personal.api.users.data.Role;
 import com.personal.api.users.data.UserEntity;
 import com.personal.api.users.data.UsersRepository;
 import com.personal.api.users.helper.UserHelper;
@@ -34,6 +37,8 @@ import reactor.core.publisher.Mono;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
 @Service
@@ -77,6 +82,18 @@ public class UserServiceImpl implements UsersService {
 		UserEntity userEntity = modelMapper.map(userDetails, UserEntity.class);
 		userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(userDetails.getPassword()));
 		
+		Set<Role> roles = new HashSet<Role>();
+		
+		Role role1 = new Role();
+		role1.setName("ADMIN");
+		roles.add(role1);
+		
+		Role role2 = new Role();
+		role2.setName("RAILWAY");
+		roles.add(role2);
+		
+		userEntity.setRoles(roles);
+		
 		usersRepository.save(userEntity);
 		
 		return userDetails;
@@ -88,8 +105,13 @@ public class UserServiceImpl implements UsersService {
         UserEntity userEntity = usersRepository.findByEmail(username);
 		
 		if(userEntity == null) throw new UsernameNotFoundException(username);	
+		Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
 		
-		return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(), true, true, true, true, new ArrayList<>());
+		for (Role role : userEntity.getRoles())
+			grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
+
+		
+		return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(), true, true, true, true, grantedAuthorities);
 	}
 	
 	@Override

@@ -1,12 +1,10 @@
 package com.personal.api.users.data;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Set;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity
 @Table(name= "users")
@@ -36,6 +34,12 @@ public class UserEntity implements Serializable {
 	
 	@Column(nullable = false, unique = true)
 	private String encryptedPassword;
+	
+	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(name = "USER_ROLES", joinColumns = {
+            @JoinColumn(name = "USER_ID") }, inverseJoinColumns = {
+            @JoinColumn(name = "ROLE_ID") })
+    private Set<Role> roles;
 
 	public long getId() {
 		return id;
@@ -84,5 +88,12 @@ public class UserEntity implements Serializable {
 	public void setEncryptedPassword(String encryptedPassword) {
 		this.encryptedPassword = encryptedPassword;
 	}
-	
+
+	public Set<Role> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(Set<Role> roles) {
+		this.roles = roles;
+	}	
 }
